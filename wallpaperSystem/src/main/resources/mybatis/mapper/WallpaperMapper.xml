@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.WallPhotoMapper">
+   <select id="findPhotoByCid" resultType="com.entity.WallPhoto">
+       select * from wallphoto where cid = #{cid} order by time desc
+   </select>
+
+
+    <!-- 统计分类的图片数量 -->
+    <select id="countForCid" resultType="int">
+        select count(*) from wallphoto where cid = #{cid}
+    </select>
+
+    <!-- 统计所有图片数量 -->
+    <select id="countTotal" resultType="int">
+        select count(*) from wallphoto
+    </select>
+
+   <insert id="add" >
+       insert ignore into wallphoto(cid,pic,filekey) values
+       <foreach collection="list" item="data" separator=",">
+           (
+                #{data.cid},
+                #{data.pic},
+                #{data.filekey}
+           )
+       </foreach>
+   </insert>
+
+   <insert id="addonline" parameterType="com.entity.WallPhoto">
+       insert ignore into wallphoto(cid,pic) values(#{cid},#{pic})
+   </insert>
+
+   <delete id="delete">
+       delete from wallphoto where id = #{id}
+   </delete>
+
+</mapper>

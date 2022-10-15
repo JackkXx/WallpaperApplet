@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.ProfileCategoryMapper">
+    <select id="findAll" resultType="com.entity.ProfileCategory">
+        select * from profilecategory where is_show = 1
+    </select>
+
+    <select id="findList" resultType="com.entity.ProfileCategory">
+        select * from profilecategory
+    </select>
+
+    <select id="findByCid" resultType="com.entity.ProfileCategory">
+        select * from profilecategory where cid = #{cid} and is_show = 1
+    </select>
+
+    <insert id="add" parameterType="com.entity.ProfileCategory">
+        insert into profilecategory(title) values(#{title})
+    </insert>
+
+    <update id="updateShow" parameterType="com.entity.ProfileCategory">
+        update profilecategory set is_show = #{is_show} where cid = #{cid}
+    </update>
+
+    <update id="update" parameterType="com.entity.ProfileCategory">
+        update profilecategory set title = #{title} where cid = #{cid}
+    </update>
+
+    <delete id="delete" >
+        delete from profilecategory where cid = #{cid}
+    </delete>
+</mapper>

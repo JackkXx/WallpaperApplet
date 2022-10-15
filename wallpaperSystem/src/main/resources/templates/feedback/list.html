@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/admin-common::commonCss(~{::title},~{},~{::script},~{::style})">
+    <title>反馈列表</title>
+
+    <script th:src="@{/laydate/laydate.js}"></script>
+    <style>
+        .body{
+            background-color: #f8f8f8;
+        }
+    </style>
+    <script type="text/html" id="bar">
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a><br/>
+    </script>
+    <script th:inline="javascript">
+        layui.use(['table','element','laydate','form'], function(){
+            var table = layui.table;
+            var element = layui.element;
+            var laydate = layui.laydate;
+            var form = layui.form;
+
+            laydate.render({
+                elem: '#search-createTime'
+                ,range: true
+            });
+            //搜索功能
+            $("#searchBtn").click(function () {
+                reload();
+            });
+
+            var tableIns = table.render({
+                elem: '#clazzTable'
+                , url: '/feedback/getList'
+                , method: 'get'
+                ,page:true
+                , defaultToolbar: []
+                , page: true
+                , limits: [5, 10]
+                , limit: 10
+                , cols: [
+                    [
+                        {field: 'id', title: 'ID', hide: true}
+                        , {field: 'id', title: '编号'}
+                        , {field: 'nickname', title: '微信昵称'}
+                        , {field: 'time', title: '反馈日期'}
+                        , {field: 'content', title: '反馈内容'}
+                        , {field: 'contact', title: '联系方式'}
+                        , {title: '操作', fixed: 'right', width: 135, toolbar: '#bar'}
+                    ]
+                ]
+                , done: function (res, curr, count) {
+                    //初始化高度，使得冻结行表体高度一致
+                    $(".layui-table-body tr").each(function (index, val) {
+                        $($(".layui-table-fixed .layui-table-body table tr")[index]).height($(val).height());
+                    });
+                    //动态监听表体高度变化，冻结行跟着改变高度
+                    $(".layui-table-body tr").resize(function () {
+                        $(".layui-table-body  tr").each(function (index, val) {
+                            $($(".layui-table-fixed .layui-table-body table tr")[index]).height($(val).height());
+                        });
+                    });
+                    $(".layui-table-header tr").resize(function () {
+                        $(".layui-table-header  tr").each(function (index, val) {
+                            $($(".layui-table-fixed .layui-table-header table tr")[index]).height($(val).height());
+                        });
+                    });
+                    //初始化高度，使得冻结行表头高度一致
+                    $(".layui-table-header tr").each(function (index, val) {
+                        $($(".layui-table-fixed .layui-table-header table tr")[index]).height($(val).height());
+                    });
+                }
+                ,parseData: function(res){ //将原始数据解析成 table 组件所规定的数据
+                    return {
+                        "code": res.code, //解析接口状态
+                        "msg": res.msg, //解析提示文本
+                        "count": res.total, //解析数据长度
+                        "data": res.data.list //解析数据列表
+                    };
+                }
+            });
+
+            //监听工具条
+            table.on('tool(clazzTable)', function (obj) {
+                var data = obj.data;
+                switch (obj.event) {
+                    //删除分类信息
+                    case 'delete':
+                        layer.confirm('真的删除么', function (index) {
+                            $.ajax({
+                                url : '/feedback/delete/',
+                                type : 'delete',
+                                data:{
+                                    "id":data.id
+                                },
+                                dataType : 'json',
+                                success : function(res) {
+                                    //弹出提示信息，并停留800毫秒
+                                    layer.msg(res.msg,{time:1200});
+                                },
+                                error: function(errorInfo) {
+                                    console.log(errorInfo);
+                                }
+                            });
+                            reload();
+                            layer.close(index);
+                        });
+                        break;
+                    };
+            });
+
+            function reload() {
+                tableIns.reload({
+                    where: {
+                    }
+                    ,page: {
+                        curr: 1 //重新从第1页开始
+
+                    }
+                });
+            }
+
+        });
+    </script>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+
+    <div th:replace="common/admin-common::header"></div>
+    <div th:replace="common/admin-common::side('feedback')"></div>
+    <div class="layui-body body">
+        <div class="layui-fluid" style="padding: 15px;">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div style="padding-bottom:10px;">
+                        <table class="layui-hide" id="clazzTable" lay-skin="line" lay-filter="clazzTable">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="common/admin-common::footer"></div>
+</div>
+
+</body>
+
+</html>

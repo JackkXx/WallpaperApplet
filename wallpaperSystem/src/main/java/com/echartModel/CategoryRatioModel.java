@@ -1,0 +1,13 @@
+package com.echartModel;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class CategoryRatioModel {
+    private Integer value;
+    private String name;
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.CategoryMapper">
+    <!-- 查询所有壁纸分类信息-->
+    <select id="findAll" resultType="com.entity.Category">
+        select * from category where is_show = 1
+    </select>
+
+    <!-- 查询所有壁纸分类信息-->
+    <select id="findList" resultType="com.entity.Category">
+        select * from category
+    </select>
+
+    <select id="findByCid" resultType="com.entity.Category">
+        select * from category where cid = #{cid} and is_show = 1
+    </select>
+
+    <insert id="add" parameterType="com.entity.Category">
+        insert into category(title) values(#{title})
+    </insert>
+
+    <update id="update" parameterType="com.entity.Category">
+        update category set title = #{title} where cid = #{cid}
+    </update>
+
+    <update id="updateShow" parameterType="com.entity.Category">
+        update category set is_show = #{is_show} where cid = #{cid}
+    </update>
+
+    <delete id="delete" >
+        delete from category where cid = #{cid}
+    </delete>
+</mapper>

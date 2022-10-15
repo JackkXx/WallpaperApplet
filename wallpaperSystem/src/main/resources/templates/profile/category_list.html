@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/admin-common::commonCss(~{::title},~{},~{::script},~{::style})">
+    <title>分类管理</title>
+
+    <script th:src="@{/laydate/laydate.js}"></script>
+    <style>
+        .body{
+            background-color: #f8f8f8;
+        }
+    </style>
+
+    <script type="text/html" id="toolbar">
+        <div class="layui-btn-container">
+            <button lay-event="save" class="layui-btn layui-btn-normal"><label class="layui-icon layui-icon-addition"></label>新增</button>
+            <button lay-event="updateCache" class="layui-btn layui-btn-danger"><label class="layui-icon layui-icon-refresh"></label>更新缓存</button>
+        </div>
+    </script>
+    <script type="text/html" id="bar">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a><br/>
+    </script>
+    <script th:inline="javascript">
+        layui.use(['table','element','laydate','form'], function(){
+            var table = layui.table;
+            var element = layui.element;
+            var laydate = layui.laydate;
+            var form = layui.form;
+
+            laydate.render({
+                elem: '#search-createTime'
+                ,range: true
+            });
+            //搜索功能
+            $("#searchBtn").click(function () {
+                reload();
+            });
+            //重置
+            $("#resetBtn").click(function () {
+                $("#searchClazzInfoForm")[0].reset();
+                tableIns.reload({
+                    where: {
+                        "msg": "",
+                        "code": "",
+                        "data": {
+                            "name": '',
+                            "startTime": '',
+                            "endTime": ''
+                        }
+                    }
+                    , page: {
+                        curr: 1
+                    }
+                });
+            });
+
+            var tableIns = table.render({
+                elem: '#clazzTable'
+                , url: '/profileCategory/getListByPage'
+                , toolbar: '#toolbar'
+                , method: 'get'
+                ,page:true
+                , defaultToolbar: []
+                , page: true
+                , limits: [5, 10]
+                , limit: 10
+                , cols: [
+                    [
+                        {field: 'id', title: 'ID', hide: true}
+                        , {field: 'cid', title: '分类ID'}
+                        , {field: 'title', title: '分类名称'}
+                        ,{field:'is_show',title: '是否显示',templet:function (data) {
+                            if (data.is_show == 1) return "<input type='checkbox' lay-filter='elemswitch'  value='"+data.cid+"' checked lay-skin='switch' lay-text='显示|隐藏'>"
+                            else return "<input type='checkbox'  lay-filter='elemswitch' value='"+data.cid+"' lay-skin='switch' lay-text='显示|隐藏'>";
+                        }}
+                        , {title: '操作', fixed: 'right', width: 135, toolbar: '#bar'}
+                    ]
+                ]
+                , done: function (res, curr, count) {
+                    //初始化高度，使得冻结行表体高度一致
+                    $(".layui-table-body tr").each(function (index, val) {
+                        $($(".layui-table-fixed .layui-table-body table tr")[index]).height($(val).height());
+                    });
+                    //动态监听表体高度变化，冻结行跟着改变高度
+                    $(".layui-table-body tr").resize(function () {
+                        $(".layui-table-body  tr").each(function (index, val) {
+                            $($(".layui-table-fixed .layui-table-body table tr")[index]).height($(val).height());
+                        });
+                    });
+                    $(".layui-table-header tr").resize(function () {
+                        $(".layui-table-header  tr").each(function (index, val) {
+                            $($(".layui-table-fixed .layui-table-header table tr")[index]).height($(val).height());
+                        });
+                    });
+                    //初始化高度，使得冻结行表头高度一致
+                    $(".layui-table-header tr").each(function (index, val) {
+                        $($(".layui-table-fixed .layui-table-header table tr")[index]).height($(val).height());
+                    });
+                }
+                ,parseData: function(res){ //将原始数据解析成 table 组件所规定的数据
+                    return {
+                        "code": res.code, //解析接口状态
+                        "msg": res.msg, //解析提示文本
+                        "count": res.total, //解析数据长度
+                        "data": res.data.list //解析数据列表
+                    };
+                }
+            });
+
+            //监听开关事件
+            form.on('switch(elemswitch)', function (data) {
+                var is_show,status = data.elem.checked;//判断开关状态
+                //分类id
+                var cid = data.elem.value;
+                if (status) {
+                    is_show = 1;
+                } else {
+                    is_show = 0;
+                }
+                $.ajax({
+                    url:'/profileCategory/updateShow',
+                    type:'POST',
+                    data:{
+                        "is_show":is_show,
+                        "cid":cid
+                    },
+                    success:function (res) {
+                        layer.msg(res.msg,{time:1200});
+                    }
+                })
+
+            });
+            //监听工具条
+            table.on('tool(clazzTable)', function (obj) {
+                var data = obj.data;
+                switch (obj.event) {
+                    //删除分类信息
+                    case 'delete':
+                        layer.confirm('真的删除么', function (index) {
+                            $.ajax({
+                                url : '/profileCategory/delete/',
+                                type : 'post',
+                                data:{
+                                    "_method":"DELETE",
+                                    "cid":data.cid
+                                },
+                                dataType : 'json',
+                                success : function(res) {
+                                    //弹出提示信息，并停留800毫秒
+                                    layer.msg(res.msg,{time:800});
+                                },
+                                error: function(errorInfo) {
+                                    console.log(errorInfo);
+                                }
+                            });
+                            layer.close(index);
+                            reload();
+                        });
+                        break;
+                    case 'edit':
+                        layer.open({
+                            type: 1,
+                            area: ['400px', '200px'],
+                            shadeClose: true, //点击遮罩关闭
+                            title: '修改分类信息',
+                            btn: ['确定修改', '取消'],
+                            content: $('#categoryInfo'),
+                            success: function (index, layero) {
+                                //选中列的值填充到编辑窗口的表单上
+                                $("#title").val(data.title);
+                                layui.form.render();
+                            },
+                            yes: function (index, layero) {
+                                //判空
+                                if ($("#title").val().trim() == '' || $("#title").val().trim() == null){
+                                    layer.msg('请填好信息',{time:800});
+                                    return;
+                                }
+                                //发起ajax请求，进行修改操作
+                                $.ajax({
+                                    url : '/profileCategory/edit/',
+                                    type : 'put',
+                                    data: {
+                                        "title":$("#title").val(),
+                                        "cid":data.cid
+                                    },
+                                    success : function(res) {
+                                        layer.msg(res.msg,{time:800});
+                                        //如果功能执行无误，执行以下操作
+                                        if(res.code == 0){
+                                            //关闭弹窗
+                                            layer.close(index);
+                                            //重新加载表格数据
+                                            reload();
+                                        }
+                                    },
+                                    error: function(errorInfo) {
+                                        console.log(errorInfo);
+                                    }
+                                });
+                            },
+                            end: function (res) {
+                                $("#stuInfoFrame").css("display", 'none');
+                            }
+                        });
+                        break;
+                }
+                ;
+            });
+            table.on('toolbar(clazzTable)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'save':
+                        layer.open({
+                            type: 1,
+                            area: ['400px', '200px'],
+                            shadeClose: true, //开启遮罩关闭
+                            title: '添加分类',
+                            closeBtn: 1, //不显示关闭按钮
+                            anim: 2,
+                            btn: ['确定添加', '取消'],
+                            content: $('#categoryInfo'),
+                            success: function (index, layero) {
+                                layui.form.render();
+                            },
+                            yes: function (index, layero) {
+                                if ($("#title").val().trim() == '' || $("#title").val().trim() == null){
+                                    layer.msg('请填写完整',{time:800});
+                                    return;
+                                }
+                                $.ajax({
+                                    url : '/profileCategory/add',
+                                    type : 'post',
+                                    data: {
+                                        "title":$("#title").val()
+                                    },
+                                    success : function(res) {
+                                        layer.msg(res.msg,{time:1000});
+                                        if (res.code == 0){
+                                            //关闭当前弹窗
+                                            layer.close(index);
+                                            //重新加载表单数据
+                                            reload();
+                                        }
+                                    },
+                                    error: function(errorInfo) {
+                                        layer.msg(errorInfo);
+                                    }
+                                });
+                            },
+                            end: function (res) {
+                                $("#stuInfoFrame").css("display", 'none');
+                            }
+                        });
+                        break;
+                    case 'updateCache':
+                        $.ajax({
+                            url : '/updateProfileCategoryCache',
+                            type : 'POST',
+                            success : function(res) {
+                                layer.msg(res.msg,{time:1000});
+                            },
+                            error: function(errorInfo) {
+                                layer.msg(errorInfo);
+                            }
+                        });
+                        break;
+                };
+            });
+
+            function reload() {
+                tableIns.reload({
+                    where: {
+                    }
+                    ,page: {
+                        curr: 1 //重新从第1页开始
+                    }
+                });
+            }
+
+        });
+    </script>
+    <!-- 添加/编辑窗口 -->
+    <div id="categoryInfo" style="display:none;">
+        <form class="layui-form" lay-filter="clazzInfoForm" id="clazzInfoForm" style="padding-right:30px">
+            <div class="layui-form-item" style="margin-top: 30px">
+                <label class="layui-form-label">分类名称</label>
+                <div class="layui-input-block">
+                    <input id="title" type="text"  placeholder="请输入分类名称" autocomplete="off" class="layui-input" required>
+                </div>
+            </div>
+        </form>
+    </div>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="common/admin-common::header"></div>
+    <div th:replace="common/admin-common::side('profilecategory')"></div>
+    <div class="layui-body body">
+        <div class="layui-fluid" style="padding: 15px;">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                        <legend style="text-align: center">头像分类</legend>
+                    </fieldset>
+                    <div style="padding-bottom:10px;">
+                        <table class="layui-hide" id="clazzTable" lay-skin="line" lay-filter="clazzTable">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="common/admin-common::footer"></div>
+</div>
+
+</body>
+
+</html>

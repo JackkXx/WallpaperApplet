@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/admin-common :: commonCss(~{::title},~{},~{::script},~{::style})">
+    <title>帮助文档</title>
+    <style type="text/css">
+        body {
+            background-color: #f8f8f8;
+        }
+        .panel{
+            margin-bottom: 10px;
+        }
+        .panel p{
+            padding: 4px 0px;
+        }
+        .last{
+            margin-bottom: 50px !important;
+        }
+
+    </style>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+
+    <div th:replace="common/admin-common :: header"></div>
+    <div th:replace="common/admin-common :: side('help')"></div>
+    <div class="layui-body main">
+        <div class="layui-fluid" style="padding: 15px;">
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="text-align: center">使用说明</legend>
+            </fieldset>
+            <div class="layui-col-md12 panel last">
+                <div class="layui-panel">
+                    <div style="padding: 30px;">
+                        <p style="font-weight: bold">使用建议<label class="layui-icon layui-icon-help" style="padding: 0px 3px"></label></p></br>
+                        <p>1、对图片进行完删除、修改后，建议更新缓存，保证缓存数据的一致性</p>
+                        <p>2、上传图片后，如果切换分类再上传，需刷新页面</p>
+                    </div>
+                </div>
+                <div class="layui-panel">
+                    <div style="padding: 30px;">
+                        <p style="font-weight: bold">常见问题<label class="layui-icon layui-icon-help" style="padding: 0px 3px"></label></p></br>
+                        <p>Q1：忘记密码?</p>
+                        <p>W1：系统有默认的账号密码，忘记请联系开发人员修改密码</p>
+                        <hr>
+                        <p>Q2：删除分类需要什么条件?</p>
+                        <p>W2：清空该分类下的所有图片</p>
+                        <hr>
+                        <p>Q3：网络图片和本地图片有什么区别?</p>
+                        <p>W3：网络图片是站外图片（需要在开发设置里设置download合法域名），本地图片是使用七牛云存储的图片</p>
+                        <hr>
+                        <p>Q4：上传本地图片失败，有哪些原因？</p>
+                        <p>W4：1、图片重复上传，导致入库失败</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、图片大于10MB，导致上传失败</p>
+                         <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、图片上传数量不超过30张 </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div th:replace="common/admin-common::footer"></div>
+</div>
+<script th:inline="javascript">
+    layui.use(['carousel', 'table'], function () {
+        var table = layui.table;
+        var carousel = layui.carousel;
+    });
+
+</script>
+</body>
+</html>

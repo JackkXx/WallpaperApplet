@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/admin-common::commonCss(~{::title},~{},~{::script},~{::style})">
+    <title>图片分类展示</title>
+
+    <script th:src="@{/laydate/laydate.js}"></script>
+
+    <style>
+        .body{
+            background-color: #f8f8f8;
+        }
+        .card{
+            cursor: pointer;
+            width: 96%;
+            height: 150px;
+            display: flex;
+            font-weight: bold;
+            border: 0.5px solid rgba(0,0,0,.4);
+            align-items: center;
+            justify-content: space-between;
+            justify-items: center;
+            padding: 10px 10px;
+            margin-bottom: 20px !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+            background-position:center center !important;
+            filter:blur(-2px);
+        }
+        .card:hover{
+            -webkit-box-shadow:0 0 4px 3px rgba(0, 0, 0, 0.3) ;
+            -moz-box-shadow:0 0 4px 3px rgba(0, 0, 0, 0.3) ;
+            box-shadow:0 0 6px 3px rgba(0, 0, 0, 0.3) ;
+
+        }
+        #app{
+            margin-bottom: 30px;
+        }
+        #category_title{
+            color: black;
+            align-items: center;
+        }
+        img{
+            width: 40px;/
+            height: 40px;
+            align-items: center;
+        }
+        .ahead{
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .ahead span{
+            font-weight: bold;
+            font-size: 24px;
+            border-bottom: 4px solid;
+            padding-bottom: 2px;
+            border-image: linear-gradient(to right, #f6d365 0%, #fda085 100%) 5;
+        }
+
+    </style>
+
+    <script th:inline="javascript">
+        layui.use(['table','element','laydate','form'], function() {
+            var table = layui.table;
+            var element = layui.element;
+            var laydate = layui.laydate;
+            var form = layui.form;
+
+            laydate.render({
+                elem: '#search-createTime'
+                , range: true
+            });
+        });
+    </script>
+
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+
+    <div th:replace="common/admin-common::header"></div>
+    <div th:replace="common/admin-common::side('wallphoto')"></div>
+
+    <div class="layui-body body" id="app">
+        <div class="layui-fluid" style="padding: 15px;margin-bottom: 30px">
+            <p class="ahead"><span>壁纸合集</span></p>
+            <div class="layui-card card" v-for="(item,index) in categoryInfo" :style="{background:bc[index%5]}" @click="showList(item.cid)">
+              <h2 id="category_title" style="display: inline" v-text="item.title"></h2>
+              <span style="float: right"><img src="/images/icon.png"></span>
+            </div>
+        </div>
+    </div>
+    <div th:replace="common/admin-common::footer"></div>
+</div>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    var app = new Vue({
+        "el":"#app",
+        "data":{
+            bc:["url('/images/4.jpg')","url('/images/9.png')","url('/images/5.png')","url('/images/15.jpg')","url('/images/13.jpg')"],
+            categoryInfo:[]
+        },
+        methods:{
+            showList(cid){
+                window.location.href = "/wallpaper/wall_list?cid="+cid;
+            }
+        },
+        mounted:function(){
+            var index = this;
+            $.get({
+                url:"/category/getList",
+                async:false,
+                success:function(res){
+                    if (res.total > 0){
+                        index.categoryInfo = res.data.list;
+                    }
+                }
+            })
+            console.log(this.categoryInfo[0].title);
+
+        }
+    })
+</script>
+</html>

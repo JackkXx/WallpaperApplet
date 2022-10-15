@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/admin-common :: commonCss(~{::title},~{},~{::script},~{::style})">
+    <title>主页</title>
+    <style type="text/css">
+        body {
+            background-color: #f8f8f8;
+        }
+        .panel{
+            margin-bottom: 10px;
+        }
+        /*解决底部遮挡问题*/
+        #last:after{
+            content: "";
+            display: block;
+            width: 100%;
+            height: 50px;
+        }
+        .panel p{
+            padding: 4px 0px;
+        }
+        #wallpaperAnalysis, #profileAnalysis{
+            height: 280px;
+        }
+
+        #chartTotal {
+            width: 100%;
+            padding: 20px 20px;
+        }
+
+        #chartTotal > li {
+            width: 28%;
+            display: inline-block;
+            list-style: none;
+            padding-left: 20px;
+            cursor: pointer;
+
+        }
+
+        #chartTotal > li + li {
+            border-left: 2px solid #eee;
+            margin-left: 20px;
+        }
+
+        #chartTotal > li:first-child {
+            width: 28%;
+            padding-left: 0;
+        }
+
+        #chartTotal > li:last-child {
+            width: 28%;
+            padding-right: 0;
+        }
+
+        #chartTotal .chartTotalTitle {
+            height: 20px;
+            text-indent: 3px;
+        }
+
+        .chartTotalTitle .chartTitleText {
+            float: left;
+            font-weight: bold;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .chartTotalTitle .chartTitleUnit {
+            float: right;
+            font-weight: bold;
+            font-size: 14px;
+            color: #666;
+        }
+
+        #chartTotal .chartTotalValue {
+            font-size: 28px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        #chartTotal .chartTotalStyle {
+            width: 100%;
+            height: 6px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+
+    <div th:replace="common/admin-common :: header"></div>
+    <div th:replace="common/admin-common :: side('index')"></div>
+    <div class="layui-body main" id="app">
+        <div class="layui-fluid" style="padding: 15px;">
+            <div class="layui-col-md12 panel">
+                <div class="layui-panel">
+                    <ul id="chartTotal">
+                        <li id="productTotal">
+                            <p class="chartTotalTitle"><span class="chartTitleText">壁纸图片数量</span><span class="chartTitleUnit">(单位：张)</span>
+                            </p>
+                            <span class="chartTotalValue" v-text="wallpaperAmount"></span>
+                            <div class="chartTotalStyle" style="background-color: #f89e9e"></div>
+                        </li>
+                        <li id="userTotal">
+                            <p class="chartTotalTitle"><span class="chartTitleText">头像图片数量</span><span class="chartTitleUnit">(单位：张)</span>
+                            </p>
+                            <span class="chartTotalValue" v-text="profileAmount"></span>
+                            <div class="chartTotalStyle" style="background-color: #9ea7f5"></div>
+                        </li>
+                        <li id="orderTotal">
+                            <p class="chartTotalTitle"><span class="chartTitleText">总图片数量</span><span class="chartTitleUnit">(单位：张)</span>
+                            </p>
+                            <span class="chartTotalValue" v-text="wallpaperAmount+profileAmount"></span>
+                            <div class="chartTotalStyle" style="background-color: #ffdea4"></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="layui-col-md6 panel">
+                <div class="layui-panel" style="padding: 25px">
+                    <div id="wallpaperAnalysis">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6" >
+                <div class="layui-panel" style="padding: 25px">
+                    <div id="profileAnalysis">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-md12 panel">
+                <div class="layui-panel">
+                    <div style="padding: 30px;">
+                        <p><span style="font-weight: bold">登录用户：</span>[[${session.user}]]</p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12 panel">
+                <div class="layui-panel">
+                    <div style="padding: 30px;">
+                        <p style="font-weight: bold">联系我们<label class="layui-icon layui-icon-release" style="padding: 0px 3px"></label> </p></br>
+                        <p>微信: kkg58589</p>
+                        <p>QQ: 1402014577</p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12 panel" id="last">
+                <div class="layui-panel">
+                    <div style="padding: 30px;">
+                        <p style="font-weight: bold">缓存设置<label class="layui-icon layui-icon-delete" style="padding: 0px 3px"></label> </p></br>
+                        <button class="layui-btn layui-btn-normal" @click="clearCache()">清除全局缓存</button>
+                        <button class="layui-btn layui-btn" @click="clearWallpaperCache()">清除全局壁纸缓存</button>
+                        <button class="layui-btn layui-btn-danger" @click="clearProfileCache()">清除全局头像缓存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="common/admin-common::footer"></div>
+</div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script th:src="@{/js/echarts.min.js}"></script>
+<script th:src="@{/js/echartsTheme.js}"></script>
+<script >
+
+
+    var app = new Vue({
+        "el":"#app",
+        "data":{
+            wallpaperAmount:0,
+            profileAmount:0,
+            wallpaperRatio:[],
+            profileRatio:[]
+        },
+        methods:{
+            showList(cid){
+                window.location.href = "/profile/profile_list?cid="+cid;
+            },
+            getWallpaperTotal(){
+                var that = this;
+                $.get({
+                    url:"/wallpaper/getTotal",
+                    async:false,
+                    success:function(res){
+                        if (res.total > 0){
+                            that.wallpaperAmount = res.data;
+                        }
+                    }
+                })
+            },
+            getProfileTotal(){
+                var that = this;
+                $.get({
+                    url:"/profile/getTotal",
+                    async:false,
+                    success:function(res){
+                        if (res.total > 0){
+                            that.profileAmount = res.data;
+                        }
+                    }
+                })
+            },
+            getWallRatio(){
+                var that = this;
+                $.get({
+                    url:"/wallpaper/getRatio",
+                    async:false,
+                    success:function(res){
+                        that.wallpaperRatio = res.data;
+                    }
+                })
+                var wallpaperData = echarts.init(document.getElementById('wallpaperAnalysis'));
+                var wallpaperOption;
+                wallpaperOption = {
+                    title: {
+                        text: '壁纸分类占比',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left'
+                    },
+                    series: [
+                        {
+                            name: '壁纸分类占比',
+                            type: 'pie',
+                            radius: '50%',
+                            data: that.wallpaperRatio,
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                wallpaperData.setOption(wallpaperOption);
+            },
+            getProfileRatio(){
+                var that = this;
+                $.get({
+                    url:"/profile/getRatio",
+                    async:false,
+                    success:function(res){
+                        that.profileRatio = res.data;
+                    }
+                })
+                var profileData = echarts.init(document.getElementById('profileAnalysis'));
+                var profileOption;
+                profileOption = {
+                    title: {
+                        text: '头像分类占比',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left'
+                    },
+                    series: [
+                        {
+                            name: '头像分类占比',
+                            type: 'pie',
+                            radius: '50%',
+                            data: that.profileRatio,
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                profileData.setOption(profileOption);
+            },
+            clearWallpaperCache(){
+                $.post({
+                    type:"delete",
+                    url:"/clearWallpaperCache",
+                    success:function(res){
+                        layer.msg(res.msg,{time:1000});
+                    }
+                })
+            },
+            clearProfileCache(){
+                $.post({
+                    type:"delete",
+                    url:"/clearProfileCache",
+                    success:function(res){
+                        layer.msg(res.msg,{time:1000});
+                    }
+                })
+            },
+            clearCache(){
+                $.ajax({
+                    url:"/flushdb",
+                    type:"DELETE",
+                    success:function (res) {
+                        layer.msg(res.msg,{time:1000});
+                    },
+                })
+            }
+        },
+        mounted:function(){
+            var that = this;
+            //获取壁纸数量
+            that.getWallpaperTotal();
+            //获取头像数量
+            that.getProfileTotal();
+            //获取壁纸分类图片比例
+            that.getWallRatio();
+            //获取头像分类图片比例
+            that.getProfileRatio();
+        }
+    })
+
+
+
+</script>
+</html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.UserMapper">
+    <!-- 根据用户名查询信息 -->
+    <select id="findByUserName" resultType="com.entity.User">
+        select * from user where username = #{username}
+    </select>
+</mapper>
